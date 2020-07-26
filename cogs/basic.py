@@ -1,9 +1,16 @@
 import discord
 from discord.ext import commands
 
+import time
+
+from random import randrange
+
 import requests
 
+import asyncio
+
 from bs4 import BeautifulSoup
+
 
 class BasicCommands(commands.Cog):
 
@@ -12,7 +19,11 @@ class BasicCommands(commands.Cog):
 
     @commands.command()
     async def ping(self, ctx):
-        await ctx.send("Funcionando")
+        """ Pong! """
+        before = time.monotonic()
+        message = await ctx.send("Pong!")
+        ping = (time.monotonic() - before) * 1000
+        await message.edit(content=f"Pong!  `{int(ping)}ms`")
 
     @commands.command()
     async def info(self, ctx):
@@ -35,3 +46,17 @@ class BasicCommands(commands.Cog):
             img = page.find("img", attrs={"class": "t0fcAb"})
             embed.set_image(url=f"{img.get('src')}")
             await ctx.send(embed=embed)
+
+    @commands.command()
+    async def deathnote(self, ctx, user):
+        embed = discord.Embed(title="Dead", description=f"Alguien ha matado a {user}",color=discord.Color.red())
+        embed.set_image(url="https://pa1.narvii.com/6039/bc4e95759f014c1aa5a8bf465ed6cf0db6156a1e_hq.gif")
+        await asyncio.sleep(40)
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    async def random(self, ctx, *, options_str):
+        options = options_str.split(" ")
+        result = options[randrange(len(options))]
+        embed = discord.Embed(title="Random", description=result, color=discord.Color.dark_magenta())
+        await ctx.send(embed=embed)
