@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 class BasicCommands(commands.Cog):
 
     def __init__(self, bot):
-        self.bot = bot
+        self.__bot = bot
 
     @commands.command()
     async def ping(self, ctx):
@@ -35,7 +35,7 @@ class BasicCommands(commands.Cog):
         embed.set_thumbnail(url=f"{ctx.guild.icon_url}")
         await ctx.send(embed=embed)
 
-    @commands.command()
+    """@commands.command()
     async def img(self, ctx, *, search):
         url = f"https://www.google.co.in/search?q={search}&source=lnms&tbm=isch"
 
@@ -45,7 +45,7 @@ class BasicCommands(commands.Cog):
             page = BeautifulSoup(page.text, "lxml")
             img = page.find("img", attrs={"class": "t0fcAb"})
             embed.set_image(url=f"{img.get('src')}")
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed)"""
 
     @commands.command()
     async def deathnote(self, ctx, user):

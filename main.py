@@ -4,6 +4,7 @@ from util.settings import Vars
 
 from cogs.basic import BasicCommands
 from cogs.events import Events
+from cogs.tournament import Tournament
 
 class BirdBOT(commands.Bot):
 
@@ -12,6 +13,7 @@ class BirdBOT(commands.Bot):
         super().__init__(command_prefix=self.vars.get_prefix())
         self.add_cog(BasicCommands(self))
         self.add_cog(Events(self))
+        self.add_cog(Tournament(self))
 
 
 if __name__ == '__main__':
