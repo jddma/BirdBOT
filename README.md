@@ -11,7 +11,7 @@ Código fuente de un bot de Discord escrito en Python con comandos utiles y curi
 * bs4
 * lxml
 
-## Descarga e implementación
+## Descarga e instalación
 ```bash
 $ git clone https://github.com/jddma/BirdBOT.git
 $ cd BirdBOT/
@@ -25,6 +25,15 @@ $ cd venv/Scripts/
 $ activate.bat
 
 (venv)$ pip3 install -r requirements.txt
+```
+
+## Configuración
+En el directorio _resources/_ crear un archivo global_vars.json con el siguiente contenido 
+```file
+{
+    "prefix": "//",
+    "token": "bot token"
+}
 ```
 
 ## Licencia
