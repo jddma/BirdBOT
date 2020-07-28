@@ -24,11 +24,45 @@ class Tournament(commands.Cog):
 
         return result
 
+    def __get_member(self, members, winner):
+        for member in members:
+            if member.mention == winner:
+                return member, False
+
+        return None, True
+
+    #Metodo que genera la nueva vista del torneo o mustra el campeón
     def __get_round_embed(self, ctx):
+
+        #obtiene la cantdad de eliminados en la ronda actual
+        count_lousers = self.__tournaments[ctx.guild.id].count("~~Eliminado~~")
+
+        #Verifica que la ronda halla terminado con el numero de eliminados
+        if count_lousers == (len(self.__tournaments[ctx.guild.id]) / 2):
+            #elimina definitivamente a los eliminados para pasar a la siguiente ronda
+            for _ in range(count_lousers):
+                self.__tournaments[ctx.guild.id].remove("~~Eliminado~~")
+
+            #rectifica que se tenga que añadir un repechaje
+            if ((len(self.__tournaments[ctx.guild.id]) % 2) != 0) and (len(self.__tournaments[ctx.guild.id]) > 1):
+                self.__tournaments[ctx.guild.id].append("repechaje")
+
+        #rectifica que exista un campeón
         if len(self.__tournaments[ctx.guild.id]) == 1:
-            pass
+            winner, err = self.__get_member(ctx.guild.members, self.__tournaments[ctx.guild.id][0])
+            if not err:
+                #Mostrar el campeón en el chat
+                embed = discord.Embed(title="CAMPEÓN",
+                                      description=f":confetti_ball::confetti_ball::confetti_ball:{self.__tournaments[ctx.guild.id][0]}:confetti_ball::confetti_ball::confetti_ball:",
+                                      color=discord.Color.gold())
+                embed.set_image(url=winner.avatar_url)
+                embed.set_thumbnail(url="https://media1.tenor.com/images/8fd803044e63b141814db1650c35ee43/tenor.gif")
+                del self.__tournaments[ctx.guild.id]
+                return embed
+        #final
         elif len(self.__tournaments[ctx.guild.id]) == 2:
             desc = "Final"
+        #semifinañ
         elif len(self.__tournaments[ctx.guild.id]) == 4:
             desc = "Semifinal"
         else:
@@ -36,11 +70,53 @@ class Tournament(commands.Cog):
 
         embed = discord.Embed(title="Torneo", description=desc, color=discord.Color.dark_gold())
         i = 0
+        #genera los enfrentamientos
         while i < len(self.__tournaments[ctx.guild.id]):
             embed.add_field(name="*", value=f"{self.__tournaments[ctx.guild.id][i]} ***vs*** {self.__tournaments[ctx.guild.id][i + 1]}")
             i += 2
         embed.set_thumbnail(url=ctx.guild.icon_url)
         return embed
+
+    #Comando que sirve para poner el reemplazar el ganador de un repechaje
+    @commands.command()
+    async def tournrep(self, ctx, rep_member_to_add):
+        #En caso de que no exista un torneo activo en el servidor
+        try:
+            #Obtiene la posición del repqchaje
+            rep_index = self.__tournaments[ctx.guild.id].index("repechaje")
+
+            #en caso de que no exisa un repechaje en la ronda actual
+            if rep_index == -1:
+                embed = discord.Embed(title="No repechaje", description="No existe un repechaje en la ronda actual", color=discord.Color.red())
+                await ctx.send(embed=embed)
+            else:
+                 self.__tournaments[ctx.guild.id][rep_index] = rep_member_to_add
+                 await ctx.send(embed=self.__get_round_embed(ctx))
+        except KeyError:
+            embed = discord.Embed(title="Torneo inexistente", description="No existe un torneo activo en el servidor", color=discord.Color.red())
+            await ctx.send(embed=embed)
+
+    #Comando para registrar la derrota de un jugador
+    @commands.command()
+    async def tournlouser(self, ctx, louser: str):
+        #Obtener el id del servidor sonde se uso el comando
+        id_server = ctx.guild.id
+
+        #Rectifica que exista un torneo activo en el servidor
+        try:
+
+            #Rectifica que el participante a eliminar este activo en el torneo
+            if louser in self.__tournaments[id_server]:
+                #Elimina al participante y muestra el estado del torneo
+                louser_index = self.__tournaments[id_server].index(louser)
+                self.__tournaments[id_server][louser_index] = "~~Eliminado~~"
+                await ctx.send(embed=self.__get_round_embed(ctx))
+            else:
+                embed = discord.Embed(title="No encontrado", description=f"El participante {louser} no se encuentra en el torneo o ya fue eliminado", color=discord.Color.red())
+                await ctx.send(embed=embed)
+        except KeyError:
+            embed = discord.Embed(title="Torneo inexsistente", description=f"No existe un torneo activo en el servidor, para crearlo use el comando `tournament`", color=discord.Color.red())
+            await ctx.send(embed=embed)
 
     #Comando para eliminar un torneo del servidor
     @commands.command()
@@ -51,20 +127,20 @@ class Tournament(commands.Cog):
             del self.__tournaments[ctx.guild.id]
             embed = discord.Embed(title="Eliminado", description="Torneo eliminado")
             await ctx.send(embed=embed)
-        except:
+        except KeyError:
             embed = discord.Embed(title="Error", description="No se registra ningún torneo en progreso", color=discord.Color.red())
             await ctx.send(embed=embed)
 
     # Comando para la cración de un torneo, se le debe enviar como parametro el canal del cual se obtendran los participantes
     @commands.command()
-    async def tournament(self, ctx, channel_to_search: str):
+    async def tournament(self, ctx, *, channel_to_search: str):
 
         #Verifica qu un torneo no se encuentre en progreso
         try:
             self.__tournaments[ctx.guild.id]
             embed = discord.Embed(title="Torneo en progreso", description="Ya existe un torneo activo en el servidor, si quieres eliminarlo usa el comando `tournend`.", color=discord.Color.dark_orange())
             await ctx.send(embed=embed)
-        except:
+        except KeyError:
             #Llama al metodo encargado de buscar el canal solicitado
             channel, err = self.__search_channel(ctx.guild.channels, channel_to_search)
 
