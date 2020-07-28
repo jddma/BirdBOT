@@ -55,7 +55,12 @@ class Tournament(commands.Cog):
                 embed = discord.Embed(title="CAMPEÓN",
                                       description=f":confetti_ball::confetti_ball::confetti_ball:{self.__tournaments[ctx.guild.id][0]}:confetti_ball::confetti_ball::confetti_ball:",
                                       color=discord.Color.gold())
-                embed.set_image(url=winner.avatar_url)
+                #En caso de que el ganador no sea un usuario de Discord
+                try:
+                    embed.set_image(url=winner.avatar_url)
+                except:
+                    embed.set_image(url="https://cdn.discordapp.com/embed/avatars/2.png")
+
                 embed.set_thumbnail(url="https://media1.tenor.com/images/8fd803044e63b141814db1650c35ee43/tenor.gif")
                 del self.__tournaments[ctx.guild.id]
                 return embed
@@ -76,6 +81,36 @@ class Tournament(commands.Cog):
             i += 2
         embed.set_thumbnail(url=ctx.guild.icon_url)
         return embed
+
+    #Comando que permite añadir manualmente un participante a un torneo en curso
+    @commands.command()
+    async def tournadd(self, ctx, member_to_add):
+
+        #Rectifica que el participante a agregar no sea el participante reservado "repechaje"
+        if member_to_add == "repechaje":
+            embed = discord.Embed(title="Error",description="El participante __repechaje__ no puede ser usado, por favor use otro nombre", color=discord.Color.red())
+            await ctx.send(embed=embed)
+
+        else:
+            try:
+                #Rectifica que el perticipante a agregar no se encuantre ya en el torneo
+                if member_to_add in self.__tournaments[ctx.guild.id]:
+                    embed = discord.Embed(title="Error", description=f"El participante {member_to_add} ya se encuentra en el torneo", color=discord.Color.red())
+                    await ctx.send(embed=embed)
+                #Si existe un repechaje en el torneo se reemplazara con el nuevo participante
+                else:
+                    rep_index = self.__tournaments[ctx.guild.id].index("repechaje")
+                    self.__tournaments[ctx.guild.id][rep_index] = member_to_add
+                    await ctx.send(embed=self.__get_round_embed(ctx))
+            #En caso de que en la ronda actual no existe ningun repechaje añadira al nuevo participante y un repechaje
+            except ValueError:
+                self.__tournaments[ctx.guild.id].extend([member_to_add, "repechaje"])
+                await ctx.send(embed=self.__get_round_embed(ctx))
+
+            #En caso de que no exista un torneo activo en el servidor
+            except KeyError:
+                embed = discord.Embed(title="Error", description="No existe un torneo activo en el servidor", color=discord.Color.red())
+                await ctx.send(embed=embed)
 
     #Comando que sirve para poner el reemplazar el ganador de un repechaje
     @commands.command()
