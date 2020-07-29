@@ -14,13 +14,20 @@ from bs4 import BeautifulSoup
 
 class BasicCommands(commands.Cog):
 
-    def __init__(self, bot):
+    def __init__(self, bot, sounds):
         self.__bot = bot
+        self.__sounds = sounds
+
+    def __get_channel_of_server(self, voice_clients, server_id):
+        for client in voice_clients:
+            if client.server_id == server_id:
+                return client, False
+
+        return None, True
 
     #Comando que permite verificar el ping que presenta la conexión
     @commands.command()
     async def ping(self, ctx):
-        """ Pong! """
         before = time.monotonic()
         message = await ctx.send("Pong!")
         ping = (time.monotonic() - before) * 1000
@@ -70,3 +77,45 @@ class BasicCommands(commands.Cog):
         result = options[randrange(len(options))]
         embed = discord.Embed(title="Random", description=result, color=discord.Color.dark_magenta())
         await ctx.send(embed=embed)
+
+    #Comando para reproducir los sonidos configurados
+    @commands.command()
+    async def sound(self, ctx, *, sound):
+
+        #Rectifica que el usuario que ejecuto el comando se encuantre en un canal de voz
+        if ctx.author.voice is None:
+            embed = discord.Embed(title="Error", description="Debe estar en un vanal de voz para esto", color=discord.Color.red())
+            await ctx.send(embed=embed)
+
+        else:
+            try:
+                sound_file_name = self.__sounds[sound]
+                sound_file_path = f"resources/sounds/{sound_file_name}"
+                channel_name = ctx.author.voice.channel.name
+                channel = discord.utils.get(ctx.guild.channels, name=channel_name)
+
+                #Verifica que el bot ya se encuentre en un canal del servidor
+                try:
+                    vc = await channel.connect()
+
+                except discord.errors.ClientException:
+                    vc, _ = self.__get_channel_of_server(ctx.bot.voice_clients, ctx.guild.id)
+
+                    #Rectifica que el bot se encuentre en el mismo canar que el usuario
+                    if not channel.id == vc.channel.id:
+                        await vc.disconnect()
+                        vc = await channel.connect()
+
+                #Rectifica que no exista un sonido ya reproduciendose
+                try:
+                    vc.play(discord.FFmpegPCMAudio(sound_file_path), after=None)
+                    embed = discord.Embed(title="Sound", description=f"Reproduciendo _{sound}_", color=discord.Color.blue())
+                    await ctx.send(embed=embed)
+
+                except discord.errors.ClientException:
+                    embed = discord.Embed(title="Ocupado", description="Ya se encuantra un sonido e reproducción",color=discord.Color.red())
+                    await ctx.send(embed=embed)
+
+            except KeyError:
+                embed = discord.Embed(title="Not Found", description=f"El sonido _{sound}_ no se encuentra", color=discord.Color.red())
+                await ctx.send(embed=embed)

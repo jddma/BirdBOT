@@ -13,7 +13,7 @@ class BirdBOT(commands.Bot):
         super().__init__(command_prefix=self.vars.get_prefix())
 
         #Agregar los cogs correspondientes
-        self.add_cog(BasicCommands(self))
+        self.add_cog(BasicCommands(self, self.vars.get_sounds()))
         self.add_cog(Events(self))
         self.add_cog(Tournament(self))
 
