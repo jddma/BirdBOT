@@ -70,6 +70,15 @@ class BasicCommands(commands.Cog):
         await asyncio.sleep(40)
         await ctx.send(embed=embed)
 
+    #Metodo que se ejecutara cuando el comando deathbote falle
+    @deathnote.error
+    async def deathnote_error(self, ctx, error):
+        if error.args[0] == 'user is a required argument that is missing.':
+            embed = discord.Embed(title="Error", description="Comando usado erroneamente", color=discord.Color.red())
+            embed.add_field(name="Uso del comando _deathnote_", value="deathnote <member>")
+            embed.set_thumbnail(url=ctx.me.avatar_url)
+            await ctx.send(embed=embed)
+
     #Comando que escoge aleatoriamente entre varias opciones
     @commands.command()
     async def random(self, ctx, *, options_str):
@@ -77,6 +86,16 @@ class BasicCommands(commands.Cog):
         result = options[randrange(len(options))]
         embed = discord.Embed(title="Random", description=result, color=discord.Color.dark_magenta())
         await ctx.send(embed=embed)
+
+    # Metodo que se ejecutara cuando el comando error falle
+    @random.error
+    async def random_error(self, ctx, error):
+        t = error.args[0]
+        if error.args[0] == 'options_str is a required argument that is missing.':
+            embed = discord.Embed(title="Error", description="Comando usado erroneamente", color=discord.Color.red())
+            embed.add_field(name="Uso del comando _random_", value="random <opcion1 opcion2 opcion3 ...>")
+            embed.set_thumbnail(url=ctx.me.avatar_url)
+            await ctx.send(embed=embed)
 
     #Comando para reproducir los sonidos configurados
     @commands.command()
@@ -119,3 +138,11 @@ class BasicCommands(commands.Cog):
             except KeyError:
                 embed = discord.Embed(title="Not Found", description=f"El sonido _{sound}_ no se encuentra", color=discord.Color.red())
                 await ctx.send(embed=embed)
+
+    @sound.error
+    async def sound_error(self, ctx, error):
+        if error.args[0] == 'sound is a required argument that is missing.':
+            embed = discord.Embed(title="Error", description="Comando usado erroneamente", color=discord.Color.red())
+            embed.add_field(name="Uso del comando _sound_", value="sound <nombre_del_sonido>")
+            embed.set_thumbnail(url=ctx.me.avatar_url)
+            await ctx.send(embed=embed)

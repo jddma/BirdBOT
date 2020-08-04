@@ -29,3 +29,7 @@ class Admin(commands.Cog):
             except discord.errors.Forbidden:
                 embed = discord.Embed(title="Error", description="No tengo permisos suficientes para esto", color=discord.Color.red())
                 await ctx.send(embed=embed)
+
+    @setrole.error
+    async def setrole_error(self, ctx, error):
+        pass

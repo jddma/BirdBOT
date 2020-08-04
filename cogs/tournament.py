@@ -82,6 +82,12 @@ class Tournament(commands.Cog):
         embed.set_thumbnail(url=ctx.guild.icon_url)
         return embed
 
+    def __get_command_error_embed(self, command, command_args, ctx):
+        embed = discord.Embed(title="Error", description="Comando usado erroneamente", color=discord.Color.red())
+        embed.add_field(name=f"Uso del comando _{command}_", value=f"{command} {command_args}")
+        embed.set_thumbnail(url=ctx.me.avatar_url)
+        return embed
+
     #Comando que permite añadir manualmente un participante a un torneo en curso
     @commands.command()
     async def tournadd(self, ctx, member_to_add):
@@ -112,6 +118,11 @@ class Tournament(commands.Cog):
                 embed = discord.Embed(title="Error", description="No existe un torneo activo en el servidor", color=discord.Color.red())
                 await ctx.send(embed=embed)
 
+    @tournadd.error
+    async def tournadd_error(self, ctx, error):
+        if error.args[0] == 'member_to_add is a required argument that is missing.':
+            await ctx.send(embed=self.__get_command_error_embed("tournadd", "<miembro_a_agregar>", ctx))
+
     #Comando que sirve para poner el reemplazar el ganador de un repechaje
     @commands.command()
     async def tournrep(self, ctx, rep_member_to_add):
@@ -130,6 +141,11 @@ class Tournament(commands.Cog):
         except KeyError:
             embed = discord.Embed(title="Torneo inexistente", description="No existe un torneo activo en el servidor", color=discord.Color.red())
             await ctx.send(embed=embed)
+
+    @tournrep.error
+    async def tournrep_error(self, ctx, error):
+        if error.args[0] == 'rep_member_to_add is a required argument that is missing.':
+            await ctx.send(embed=self.__get_command_error_embed("tournrep", "<miembro_a_reemplazar por el repechaje>", ctx))
 
     #Comando para registrar la derrota de un jugador
     @commands.command()
@@ -152,6 +168,11 @@ class Tournament(commands.Cog):
         except KeyError:
             embed = discord.Embed(title="Torneo inexsistente", description=f"No existe un torneo activo en el servidor, para crearlo use el comando `tournament`", color=discord.Color.red())
             await ctx.send(embed=embed)
+
+    @tournloser.error
+    async def tournloser_error(self, ctx, error):
+        if error.args[0] == 'louser is a required argument that is missing.':
+            await ctx.send(embed=self.__get_command_error_embed("tournloser", "<miembro_a_eliminar>", ctx))
 
     #Comando para eliminar un torneo del servidor
     @commands.command()
@@ -201,3 +222,8 @@ class Tournament(commands.Cog):
                     self.__tournaments[ctx.guild.id] = channel_members
                     self.__tournaments[ctx.guild.id] = random.sample(self.__tournaments[ctx.guild.id], len(self.__tournaments[ctx.guild.id]))
                     await ctx.send(embed=self.__get_round_embed(ctx))
+
+    @tournament.error
+    async def tournament_error(self, ctx, error):
+        if error.args[0] == 'channel_to_search is a required argument that is missing.':
+            await ctx.send(embed=self.__get_command_error_embed("tournament", "<canal_de_donde_se_obtendran_participantes>", ctx))
