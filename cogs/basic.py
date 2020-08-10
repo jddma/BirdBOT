@@ -146,3 +146,18 @@ class BasicCommands(commands.Cog):
             embed.add_field(name="Uso del comando _sound_", value="sound <nombre_del_sonido>")
             embed.set_thumbnail(url=ctx.me.avatar_url)
             await ctx.send(embed=embed)
+
+    @commands.command()
+    async def soundslist(self, ctx):
+        sounds = self.__sounds.keys()
+        if len(sounds) == 0:
+            embed = discord.Embed(title="Sin contenido", description="NO se tiene sonidos registrados", color=discord.Color.red())
+            await ctx.send(embed=embed)
+
+        else:
+            embed = discord.Embed(title="__Listas de sonidos__", color=discord.Color.blue())
+            embed.set_thumbnail(url=ctx.me.avatar_url)
+            for sound_name in sounds:
+                embed.add_field(name=sound_name, value=self.__sounds[sound_name])
+
+            await ctx.send(embed=embed)
