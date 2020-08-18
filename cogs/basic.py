@@ -67,6 +67,7 @@ class BasicCommands(commands.Cog):
     async def deathnote(self, ctx, user):
         embed = discord.Embed(title="Dead", description=f"Alguien ha matado a {user}",color=discord.Color.red())
         embed.set_image(url="https://pa1.narvii.com/6039/bc4e95759f014c1aa5a8bf465ed6cf0db6156a1e_hq.gif")
+        await ctx.message.delete()
         await asyncio.sleep(40)
         await ctx.send(embed=embed)
 
