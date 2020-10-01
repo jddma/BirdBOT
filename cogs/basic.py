@@ -17,6 +17,7 @@ class BasicCommands(commands.Cog):
     def __init__(self, bot, sounds):
         self.__bot = bot
         self.__sounds = sounds
+        self.__votings = {}
 
     def __get_channel_of_server(self, voice_clients, server_id):
         for client in voice_clients:
@@ -160,5 +161,65 @@ class BasicCommands(commands.Cog):
             embed.set_thumbnail(url=ctx.me.avatar_url)
             for sound_name in sounds:
                 embed.add_field(name=sound_name, value=self.__sounds[sound_name])
+
+            await ctx.send(embed=embed)
+
+    @commands.command()
+    async def voting(self, ctx, num: int, *, options):
+
+        #Verifica que no exista una votación en progreso
+        try:
+            self.__votings[ctx.guild.id]
+            embed = discord.Embed(title="Votación en progrado", description="Ya existe una votación en progreso", color=discord.Color.red())
+            await ctx.send(embed=embed)
+        except KeyError:
+            #Obtiene las opciones ingresadas
+            options_list = options.split(" ")
+
+            #Instancia un contador para cada opción
+            options_count = [0, ] * len(options_list)
+            voting = [options_list, options_count, num, []]
+            embed = discord.Embed(title="Votación iniciada", description="", color=discord.Color.green())
+            for i in range(len(options_list)):
+                embed.add_field(name=f"Opción #{i}: ", value=options_list[i])
+
+            self.__votings[ctx.guild.id] = voting
+            await ctx.send(embed=embed)
+
+    @commands.command()
+    async def vote(self, ctx, option: int):
+
+        #Validar que exista una votación en progreso
+        try:
+
+            #Validar que el miembro que uso el comando no realizara una votación previamente
+            if ctx.author.mention in self.__votings[ctx.guild.id][3]:
+                embed = discord.Embed(title="NO mi ciela", description="usted ya puso su voto", color=discord.Color.red())
+                await ctx.send(embed=embed)
+
+            else:
+
+                #Suma el voto
+                self.__votings[ctx.guild.id][1][option] += 1
+
+                #Registrar el usuario que ya realizo un voto
+                self.__votings[ctx.guild.id][3].append(ctx.author.mention)
+                await ctx.send("Voto realizado")
+
+                #Validar que todos los votos se hayan realizado
+                if len(self.__votings[ctx.guild.id][3]) == self.__votings[ctx.guild.id][2]:
+                    embed = discord.Embed(title="Votación finalizada", description="Resultaodos: ",color=discord.Color.gold())
+                    for i in range(len(self.__votings[ctx.guild.id][0])):
+                        option = self.__votings[ctx.guild.id][0][i]
+                        count = self.__votings[ctx.guild.id][1][i]
+                        embed.add_field(name="Resultados", value=f"{option}: {count}")
+
+                    del self.__votings[ctx.guild.id]
+                    await ctx.send(embed=embed)
+
+
+        except KeyError as err:
+            print(err)
+            embed = discord.Embed(title="Votación inexsistente", description="No existe una votación en progreso", color=discord.Color.red())
 
             await ctx.send(embed=embed)
